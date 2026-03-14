@@ -557,11 +557,14 @@ const scoreColor = s =>
 
 // ── WEBSOCKET ────────────────────────────────────────────────────────────────
 function getWsUrl() {
-  const input = document.getElementById("ws-input").value.trim();
-  if (input) return input;
-  // Auto-detect: if served from Railway, use same host
-  const proto = location.protocol === "https:" ? "wss:" : "ws:";
-  return `${proto}//${location.host}`;
+  let input = document.getElementById("ws-input").value.trim();
+  if (!input) {
+    const proto = location.protocol === "https:" ? "wss:" : "ws:";
+    input = `${proto}//${location.host}`;
+  }
+  // Always ensure /ws path for Railway proxy compatibility
+  if (!input.endsWith("/ws")) input = input.replace(/\/+$/, "") + "/ws";
+  return input;
 }
 
 function connectWS() {
@@ -899,9 +902,9 @@ setInterval(() => { if (filteredList.length) renderTable(); }, 5000);
 // Auto-connect if served from Railway
 window.onload = () => {
   const wsInput = document.getElementById("ws-input");
+  const proto = location.protocol === "https:" ? "wss:" : "ws:";
+  wsInput.value = `${proto}//${location.host}/ws`;
   if (location.hostname !== "localhost" && location.hostname !== "127.0.0.1") {
-    const proto = location.protocol === "https:" ? "wss:" : "ws:";
-    wsInput.value = `${proto}//${location.host}`;
     connectWS();
   }
 };
